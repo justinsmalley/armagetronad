@@ -1671,7 +1671,7 @@ void sr_LoadDefaultConfig(){
     // fonts look best in bilinear filtering, no mipmaps
     rTextureGroups::TextureMode[rTextureGroups::TEX_FONT]=GL_LINEAR;
     #endif
-    sr_floorDetail=rFLOOR_TWOTEXTURE;
+    sr_floorDetail=rFLOOR_TEXTURE;  // Use single floor.png texture
     sr_floorMirror=rMIRROR_OFF;
     sr_infinityPlane=false;
     sr_lowerSky=false;
