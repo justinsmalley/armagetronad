@@ -68,17 +68,24 @@ This creates a standalone `Armagetronad Advanced.app` and distributable DMG.
 ```bash
 # Create a separate build directory
 rm -rf build-bundle
+
+make distclean
+
 mkdir build-bundle
+
+# Generate version file (required before configure)
+sh batch/make/version --verbose . | awk '{ print "#define TRUE_ARMAGETRONAD_" $1 " " substr( $0, index( $0, $2 ) ) }' > src/tTrueVersion.h
+
 cd build-bundle
 
 # Configure for bundle (pass boost paths)
-CPPFLAGS="-I/opt/homebrew/opt/boost/include" \
-    ../desktop/os-x/configure_for_bundle.sh --with-boost=/opt/homebrew/opt/boost
+../desktop/os-x/configure_for_bundle.sh --with-boost=/opt/homebrew/opt/boost CPPFLAGS="-I/opt/homebrew/opt/boost/include"
 
 # Build
 make -j8
 
 # Create app bundle and DMG
+chmod +x desktop/os-x/build_bundle.sh
 ./desktop/os-x/build_bundle.sh
 ```
 
@@ -159,12 +166,56 @@ sudo chown -R $(whoami) /opt/homebrew
 
 ## Publishing a Release
 
+### Prerequisites
+
+Install GitHub CLI (if not already installed):
+
 ```bash
+brew install gh
+gh auth login
+```
+
+### Method 1: Using GitHub CLI (Recommended)
+
+```bash
+# Tag the release
 git tag v0.4.0-mining-truck
 git push origin v0.4.0-mining-truck
 
+# Create release with DMG installer
 gh release create v0.4.0-mining-truck \
   --title "Mining Truck Edition v0.4.0" \
   --notes "Release notes here." \
   "build-bundle/armagetronad-*.dmg"
+
+# Or include all artifacts (.app, DMG, and ZIP)
+gh release create v0.4.0-mining-truck \
+  --title "Mining Truck Edition v0.4.0" \
+  --notes "Release notes here." \
+  "build-bundle/Armagetron Advanced.app" \
+  "build-bundle/armagetronad-*.dmg" \
+  "build-bundle/armagetronad-client-*.macOS.zip"
 ```
+
+### Method 2: Using GitHub Web UI
+
+1. Push the tag first:
+   ```bash
+   git tag v0.4.0-mining-truck
+   git push origin v0.4.0-mining-truck
+   ```
+
+2. Go to your repository on GitHub → **Releases** → **Draft a new release**
+
+3. Select the tag `v0.4.0-mining-truck`
+
+4. Fill in:
+   - **Title**: "Mining Truck Edition v0.4.0"
+   - **Description**: Your release notes
+
+5. Drag and drop files from `build-bundle/`:
+   - `armagetronad-*.dmg` (DMG installer - recommended for macOS users)
+   - `Armagetron Advanced.app` (optional - raw app bundle)
+   - `armagetronad-client-*.macOS.zip` (optional - ZIP archive)
+
+6. Click **Publish release**
